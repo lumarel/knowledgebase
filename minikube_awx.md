@@ -6,15 +6,15 @@
 - Add docker-ce repo
 - Install docker and conntrack
 
-  `sudo dnf install docker-ce conntrack`
+  `dnf install docker-ce conntrack`
 
 - Enable and start docker
 
-  `sudo systemctl enable --now docker`
+  `systemctl enable --now docker`
 
 - Add local user to docker group
 
-  `sudo usermod -a -G wheel,docker lumarel`
+  `sudo usermod -a -G wheel,docker <local user>`
 
 - Download and install minikube rpm
 
