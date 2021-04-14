@@ -32,6 +32,10 @@
 
   `alias k="minikube kubectl --"`
 
+- Disable SELINUX for installation until next boot
+
+  `sudo setenforce 0`
+
 - Startup minikube
 
   `minikube start --addons=ingress --driver=none`
