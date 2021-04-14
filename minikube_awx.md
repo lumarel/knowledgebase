@@ -46,7 +46,7 @@
 
 - Wait until awx-operator is up
 
-  `k logs -f deployment/awx-operator`
+  `k get pods`
 
 - Create awx configuration (write a file `my-awx.yml`)
 
@@ -85,6 +85,10 @@
   `k apply -f my-awx-password.yml`
 
   `k apply -f my-awx.yml`
+
+- Wait until awx-operator has done its job
+
+  `k logs -f deployment/awx-operator`
 
 - Check that everything works
 - Stop minikube
