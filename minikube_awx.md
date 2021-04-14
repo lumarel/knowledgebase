@@ -42,7 +42,7 @@
 
 - Install awx-operator
 
-  `k -- apply -f https://raw.githubusercontent.com/ansible/awx-operator/devel/deploy/awx-operator.yaml`
+  `k apply -f https://raw.githubusercontent.com/ansible/awx-operator/devel/deploy/awx-operator.yaml`
 
 - Wait until awx-operator is up
 
