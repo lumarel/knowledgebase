@@ -6,4 +6,4 @@
 - `growpart /dev/sda 3`
 - `pvresize /dev/sda3`
 - `lvextend -l +100%FREE /dev/mapper/cl-root`
-- `xfs_growpart /`
+- `xfs_growfs /`
