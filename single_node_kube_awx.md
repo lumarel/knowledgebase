@@ -131,6 +131,7 @@ spec:
 
 ### Antrea
 
+[https://github.com/antrea-io/antrea/blob/main/docs/versioning.md#antrea-upgrade-and-supported-version-skew](https://github.com/antrea-io/antrea/blob/main/docs/versioning.md#antrea-upgrade-and-supported-version-skew)
 Upgrade at max 4 minor versions
 
 - `mv antrea.yml antrea.yml.1`
@@ -139,6 +140,8 @@ Upgrade at max 4 minor versions
 - `watch kubectl get po -n kube-system`
 
 ### Contour
+
+[https://projectcontour.io/resources/upgrading/](https://projectcontour.io/resources/upgrading/)
 
 - `mv contour.yaml contour.yaml.1`
 - `curl -LO https://projectcontour.io/quickstart/contour.yaml`
