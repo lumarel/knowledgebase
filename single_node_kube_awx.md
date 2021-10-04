@@ -50,7 +50,7 @@ MemoryAccounting=true
 ```
 
 - `systemctl restart kubelet.service`
-- `curl -LO https://github.com/vmware-tanzu/antrea/releases/download/v1.1.2/antrea.yml`
+- `curl -LO https://github.com/vmware-tanzu/antrea/releases/download/v1.2.3/antrea.yml`
 - `kubectl apply -f antrea.yml`
 - `watch kubectl get po -A`
 - `mkdir -p /opt/local-path-provisioner`
@@ -64,8 +64,12 @@ MemoryAccounting=true
 
 ## Install awx
 
-- `curl -LO https://raw.githubusercontent.com/ansible/awx-operator/0.13.0/deploy/awx-operator.yaml`
-- `kubectl apply -f awx-operator.yaml`
+- `tdnf install git make tar`
+- `git clone https://github.com/ansible/awx-operator.git`
+- `cd awx-operator`
+- `git checkout tags/0.14.0`
+- `export NAMESPACE=default`
+- `make deploy`
 - `watch kubectl get po`
 - `openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out ingress-tls.crt -keyout ingress-tls.key -subj "/CN=awx.fritz.box/O=awx-ingress-tls"`
 - `kubectl create secret tls awx-ingress-tls --key ingress-tls.key --cert ingress-tls.crt`
@@ -111,5 +115,5 @@ spec:
 ```
 
 - `kubectl apply -f awx.yml`
-- `kubectl logs -f deployments/awx-operator`
+- `kubectl logs -f deployments/awx-operator-controller-manager -c manager`
 - `watch kubectl get ing,po,svc,pvc`
