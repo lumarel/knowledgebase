@@ -52,7 +52,7 @@ MemoryAccounting=true
 - `systemctl restart kubelet.service`
 - `curl -LO https://github.com/vmware-tanzu/antrea/releases/download/v1.2.3/antrea.yml`
 - `kubectl apply -f antrea.yml`
-- `watch kubectl get po -A`
+- `watch kubectl get po -n kube-system`
 - `mkdir -p /opt/local-path-provisioner`
 - `curl -LO https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.20/deploy/local-path-storage.yaml`
 - `kubectl apply -f local-path-storage.yaml`
@@ -117,3 +117,31 @@ spec:
 - `kubectl apply -f awx.yml`
 - `kubectl logs -f deployments/awx-operator-controller-manager -c manager`
 - `watch kubectl get ing,po,svc,pvc`
+
+## Upgrade components
+
+### Ansible AWX
+
+- `cd awx-operator`
+- `git reset --hard devel`
+- `git checkout tags/0.14.0`
+- `make deploy`
+- `kubectl logs -f deployments/awx-operator-controller-manager -c manager`
+- `watch kubectl get ing,po,svc,pvc`
+
+### Antrea
+
+Upgrade at max 4 minor versions
+
+- `mv antrea.yml antrea.yml.1`
+- `curl -LO https://github.com/vmware-tanzu/antrea/releases/download/v1.2.3/antrea.yml`
+- `kubectl apply -f antrea.yml`
+- `watch kubectl get po -n kube-system`
+
+### Contour
+
+- `mv contour.yaml contour.yaml.1`
+- `curl -LO https://projectcontour.io/quickstart/contour.yaml`
+- `kubectl delete namespace projectcontour`
+- `kubectl apply -f contour.yaml`
+- `watch kubectl get po -n projectcontour`
