@@ -132,6 +132,7 @@ spec:
 ### Antrea
 
 [https://github.com/antrea-io/antrea/blob/main/docs/versioning.md#antrea-upgrade-and-supported-version-skew](https://github.com/antrea-io/antrea/blob/main/docs/versioning.md#antrea-upgrade-and-supported-version-skew)
+
 Upgrade at max 4 minor versions
 
 - `mv antrea.yml antrea.yml.1`
