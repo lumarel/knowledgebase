@@ -49,3 +49,21 @@ NFS shares in fstab:
 <NFShost>:/openqa_shared/iso /var/lib/openqa/share/factory/iso nfs nfsvers=3 0 0
 <NFShost>:/openqa_shared/tests /var/lib/openqa/share/tests nfs nfsvers=3 0 0
 ```
+
+## Connect VNC client to QEMU workers
+
+For Windows I recommend the VNC Viewer by RealVNC, for Linux Remmina
+
+Windows Config:
+
+- Disable `Authenticate using single sign-on if possible`
+- Disable `Authenticate usin a smartcard or certificate store if possible`
+- Set picture quality to `High`
+
+Especially without the the picture quality setting it is sometimes unable to connect.
+
+Linux Config:
+
+- Protocol: Remmina VNC Plugin
+
+Connection will only be possible when a test is running.
