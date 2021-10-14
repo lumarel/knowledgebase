@@ -67,3 +67,9 @@ Linux Config:
 - Protocol: Remmina VNC Plugin
 
 Connection will only be possible when a test is running.
+
+## How to run a single test suite inside of a product
+
+```bash
+sudo openqa-cli api -X POST isos ISO=<iso-image> ARCH=x86_64 DISTRI=rocky FLAVOR=<product> VERSION=<version> BUILD=-<product>-$(date +%Y%m%d.%H%M%S).0 TEST=<test suite>
+```
