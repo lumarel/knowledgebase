@@ -15,7 +15,7 @@ vi .git/config
 Change `url` parameter
 
 ```bash
-git fetch --all
+git fetch --all --prune
 git pull --all
 ```
 
