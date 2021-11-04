@@ -73,3 +73,184 @@ Connection will only be possible when a test is running.
 ```bash
 sudo openqa-cli api -X POST isos ISO=<iso-image> ARCH=x86_64 DISTRI=rocky FLAVOR=<product> VERSION=<version> BUILD=-<product>-$(date +%Y%m%d.%H%M%S).0 TEST=<test suite>
 ```
+
+## Setup multi-machine multi-vm networking for fedora
+
+[https://github.com/os-autoinst/openQA/blob/master/docs/Networking.asciidoc](https://github.com/os-autoinst/openQA/blob/master/docs/Networking.asciidoc)
+
+[https://fedoraproject.org/wiki/OpenQA_advanced_network_guide](https://fedoraproject.org/wiki/OpenQA_advanced_network_guide)
+
+### Master configuration
+
+- `dnf install os-autoinst-openvswitch tunctl network-scripts`
+- `vi /etc/sysconfig/os-autoinst-openvswitch`
+
+with the content:
+
+```ini
+OS_AUTOINST_BRIDGE_LOCAL_IP=172.16.2.2
+OS_AUTOINST_BRIDGE_REWRITE_TARGET=172.17.0.0
+```
+
+- `vi /etc/sysconfig/network-scripts/ifcfg-br0`
+
+with the content:
+
+```ini
+DEVICETYPE='ovs'
+TYPE='OVSBridge'
+BOOTPROTO='static'
+IPADDR='172.16.2.2'
+NETMASK='255.254.0.0'
+DEVICE=br0
+STP=off
+ONBOOT='yes'
+NAME='br0'
+HOTPLUG='no'
+```
+
+For every openqa-worker 1 tap interface (worker@1 = tap0, worker@2 = tap1, ...)
+
+- `vi /etc/sysconfig/network-scripts/ifcfg-tap0`
+
+with the content:
+
+```ini
+DEVICETYPE='ovs'
+TYPE='OVSPort'
+OVS_BRIDGE='br0'
+DEVICE='tap0'
+ONBOOT='yes'
+BOOTPROTO='none'
+HOTPLUG='no'
+```
+
+- `vi /sbin/ifup-pre-local`
+
+with the content:
+
+```sh
+#!/bin/sh
+
+# if the interface being brought up is tap[n], create
+# the tap device first
+if=$(echo "$1" | sed -e 's,ifcfg-,,')
+tap=$(echo "$if" | sed -e 's,[0-9]\+$,,')
+if [ "$tap" == "tap" ]; then
+    tunctl -u _openqa-worker -p -t "$if"
+fi
+```
+
+- `chmod ug+x /sbin/ifup-pre-local`
+- `firewall-cmd --permanent --zone=internal --add-interface=br0`
+- `firewall-cmd --permanent --zone=public --add-masquerade`
+- `firewall-cmd --permanent --zone=internal --add-masquerade`
+- `vi /etc/sysctl.conf`
+
+with the content:
+
+```ini
+net.ipv4.ip_forward = 1
+```
+
+- `firewall-cmd --permanent --zone=public --set-target=ACCEPT`
+- `systemctl enable --now openvswitch.service network.service os-autoinst-openvswitch.service`
+- `ovs-vsctl add-br br0`
+- `vi /etc/openqa/workers.ini`
+
+with the content:
+
+```ini
+[global]
+WORKER_CLASS = qemu_x86_64,tap
+```
+
+- `setcap CAP_NET_ADMIN=ep /usr/bin/qemu-system-x86_64`
+- `ovs-vsctl set bridge br0 stp_enable=true`
+
+Configure a GRE tunnel for every additional host which will be connected to the master
+
+- `ovs-vsctl --may-exist add-port br0 gre<counting-number> -- set interface gre<counting-number> type=gre options:remote_ip=<ip-of-external-worker-host>`
+- `firewall-cmd --add-port=1723/tcp --permanent`
+
+### Worker Host configuration
+
+- `dnf install os-autoinst-openvswitch tunctl network-scripts`
+- `vi /etc/sysconfig/os-autoinst-openvswitch`
+
+with the content:
+
+```ini
+OS_AUTOINST_BRIDGE_LOCAL_IP=172.16.2.<2 + counting-number>
+OS_AUTOINST_BRIDGE_REWRITE_TARGET=172.17.0.0
+```
+
+- `vi /etc/sysconfig/network-scripts/ifcfg-br0`
+
+with the content:
+
+```ini
+DEVICETYPE='ovs'
+TYPE='OVSBridge'
+BOOTPROTO='static'
+IPADDR='172.16.2.<2 + counting-number>'
+NETMASK='255.254.0.0'
+DEVICE=br0
+STP=off
+ONBOOT='yes'
+NAME='br0'
+HOTPLUG='no'
+```
+
+For every openqa-worker 1 tap interface (worker@1 = tap0, worker@2 = tap1, ...)
+
+- `vi /etc/sysconfig/network-scripts/ifcfg-tap0`
+
+with the content:
+
+```ini
+DEVICETYPE='ovs'
+TYPE='OVSPort'
+OVS_BRIDGE='br0'
+DEVICE='tap0'
+ONBOOT='yes'
+BOOTPROTO='none'
+HOTPLUG='no'
+```
+
+- `vi /sbin/ifup-pre-local`
+
+with the content:
+
+```sh
+#!/bin/sh
+
+# if the interface being brought up is tap[n], create
+# the tap device first
+if=$(echo "$1" | sed -e 's,ifcfg-,,')
+tap=$(echo "$if" | sed -e 's,[0-9]\+$,,')
+if [ "$tap" == "tap" ]; then
+    tunctl -u _openqa-worker -p -t "$if"
+fi
+```
+
+- `chmod ug+x /sbin/ifup-pre-local`
+- `firewall-cmd --permanent --zone=internal --add-interface=br0`
+- `systemctl enable --now openvswitch.service network.service os-autoinst-openvswitch.service`
+- `ovs-vsctl add-br br0`
+- `vi /etc/openqa/workers.ini`
+
+with the content:
+
+```ini
+[global]
+WORKER_CLASS = qemu_x86_64,tap
+```
+
+- `setcap CAP_NET_ADMIN=ep /usr/bin/qemu-system-x86_64`
+- `ovs-vsctl set bridge br0 stp_enable=true`
+
+Configure the GRE tunnel which was created on the master by using the same counting-number as on the master
+
+- `ovs-vsctl --may-exist add-port br0 gre<counting-number> -- set interface gre<counting-number> type=gre options:remote_ip=<ip-of-master>`
+- `firewall-cmd --add-port=1723/tcp --permanent`
