@@ -127,17 +127,29 @@ HOTPLUG='no'
 
 - `vi /sbin/ifup-pre-local`
 
+In the last line, configure a GRE tunnel for every additional host which will be connected to the master
+
+(add multiple lines of the gre tunnel creation if needed)
+
 with the content:
 
 ```sh
 #!/bin/sh
 
+if=$(echo "$1" | sed -e 's,ifcfg-,,')
+iftype=$(echo "$if" | sed -e 's,[0-9]\+$,,')
+
 # if the interface being brought up is tap[n], create
 # the tap device first
-if=$(echo "$1" | sed -e 's,ifcfg-,,')
-tap=$(echo "$if" | sed -e 's,[0-9]\+$,,')
-if [ "$tap" == "tap" ]; then
+if [ "$iftype" == "tap" ]; then
     tunctl -u _openqa-worker -p -t "$if"
+fi
+
+# if the interface being brough up is br0, create
+# the gre tunnels
+if [ "$if" == "br0" ]; then
+    ovs-vsctl set bridge br0 stp_enable=true
+    ovs-vsctl --may-exist add-port br0 gre<counting-number> -- set interface gre<counting-number> type=gre options:remote_ip=<ip-of-external-worker-host>
 fi
 ```
 
@@ -154,6 +166,7 @@ net.ipv4.ip_forward = 1
 ```
 
 - `firewall-cmd --permanent --zone=public --set-target=ACCEPT`
+- `firewall-cmd --add-port=1723/tcp --permanent`
 - `systemctl enable --now openvswitch.service network.service os-autoinst-openvswitch.service`
 - `ovs-vsctl add-br br0`
 - `vi /etc/openqa/workers.ini`
@@ -166,12 +179,7 @@ WORKER_CLASS = qemu_x86_64,tap
 ```
 
 - `setcap CAP_NET_ADMIN=ep /usr/bin/qemu-system-x86_64`
-- `ovs-vsctl set bridge br0 stp_enable=true`
-
-Configure a GRE tunnel for every additional host which will be connected to the master
-
-- `ovs-vsctl --may-exist add-port br0 gre<counting-number> -- set interface gre<counting-number> type=gre options:remote_ip=<ip-of-external-worker-host>`
-- `firewall-cmd --add-port=1723/tcp --permanent`
+- `reboot`
 
 ### Worker Host configuration
 
@@ -220,22 +228,33 @@ HOTPLUG='no'
 
 - `vi /sbin/ifup-pre-local`
 
+In the last line, configure the GRE tunnel which was created on the master by using the same counting-number as on the master
+
 with the content:
 
 ```sh
 #!/bin/sh
 
+if=$(echo "$1" | sed -e 's,ifcfg-,,')
+iftype=$(echo "$if" | sed -e 's,[0-9]\+$,,')
+
 # if the interface being brought up is tap[n], create
 # the tap device first
-if=$(echo "$1" | sed -e 's,ifcfg-,,')
-tap=$(echo "$if" | sed -e 's,[0-9]\+$,,')
-if [ "$tap" == "tap" ]; then
+if [ "$iftype" == "tap" ]; then
     tunctl -u _openqa-worker -p -t "$if"
+fi
+
+# if the interface being brough up is br0, create
+# the gre tunnels
+if [ "$if" == "br0" ]; then
+    ovs-vsctl set bridge br0 stp_enable=true
+    ovs-vsctl --may-exist add-port br0 gre<counting-number> -- set interface gre<counting-number> type=gre options:remote_ip=<ip-of-external-worker-host>
 fi
 ```
 
 - `chmod ug+x /sbin/ifup-pre-local`
 - `firewall-cmd --permanent --zone=internal --add-interface=br0`
+- `firewall-cmd --add-port=1723/tcp --permanent`
 - `systemctl enable --now openvswitch.service network.service os-autoinst-openvswitch.service`
 - `ovs-vsctl add-br br0`
 - `vi /etc/openqa/workers.ini`
@@ -248,9 +267,4 @@ WORKER_CLASS = qemu_x86_64,tap
 ```
 
 - `setcap CAP_NET_ADMIN=ep /usr/bin/qemu-system-x86_64`
-- `ovs-vsctl set bridge br0 stp_enable=true`
-
-Configure the GRE tunnel which was created on the master by using the same counting-number as on the master
-
-- `ovs-vsctl --may-exist add-port br0 gre<counting-number> -- set interface gre<counting-number> type=gre options:remote_ip=<ip-of-master>`
-- `firewall-cmd --add-port=1723/tcp --permanent`
+- `reboot`
