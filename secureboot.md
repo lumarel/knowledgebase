@@ -74,16 +74,6 @@ Keyring
  126142696 ---lswrv      0     0   _ asymmetric: Microsoft Windows Production PCA 2011: a92902398e16c49778cd90f99e4f9ae17c55af53
 ```
 
-And finally the keys can also be found in `/proc/keys` if they show up in the OS. Easiest to read with:
-
-```bash
-# cat /proc/keys  | grep -i rocky
-0abff8bd I------     1 perm 1f030000     0     0 asymmetri Rocky kernel signing key: 288b6d785ae4ebfb9875f758558b01f5f2b5c7f8: X509.rsa f2b5c7f8 []
-1b7a9d53 I------     1 perm 1f010000     0     0 asymmetri Rocky Enterprise Software Foundation: Rocky Linux Secure Boot Root CA: 4c2c6bd7d64ee81581cab8e986661f65e2166fc4: X509.rsa e2166fc4 []
-1f793bda I------     1 perm 1f030000     0     0 asymmetri Rocky Enterprise Software Foundation: Rocky Linux Driver Update Signing Cert: b3c94fccbae32745b11dcd9a9a3926acfcef2540: X509.rsa fcef2540 []
-3c58b5bf I------     1 perm 1f030000     0     0 asymmetri Rocky Enterprise Software Foundation: Rocky Linux kpatch Signing Cert: 7392f78c54ed85dfb1391b46b23a14dd29fc7514: X509.rsa 29fc7514 []
-```
-
 And for an Intel NUC:
 
 ```bash
@@ -96,6 +86,16 @@ Keyring
  126142696 ---lswrv      0     0   _ asymmetric: Microsoft Windows Production PCA 2011: a92902398e16c49778cd90f99e4f9ae17c55af53
 ```
 
+And then the keys can also be found in `/proc/keys` if they show up in the OS. Easiest to read with:
+
+```bash
+# cat /proc/keys  | grep -i rocky
+0abff8bd I------     1 perm 1f030000     0     0 asymmetri Rocky kernel signing key: 288b6d785ae4ebfb9875f758558b01f5f2b5c7f8: X509.rsa f2b5c7f8 []
+1b7a9d53 I------     1 perm 1f010000     0     0 asymmetri Rocky Enterprise Software Foundation: Rocky Linux Secure Boot Root CA: 4c2c6bd7d64ee81581cab8e986661f65e2166fc4: X509.rsa e2166fc4 []
+1f793bda I------     1 perm 1f030000     0     0 asymmetri Rocky Enterprise Software Foundation: Rocky Linux Driver Update Signing Cert: b3c94fccbae32745b11dcd9a9a3926acfcef2540: X509.rsa fcef2540 []
+3c58b5bf I------     1 perm 1f030000     0     0 asymmetri Rocky Enterprise Software Foundation: Rocky Linux kpatch Signing Cert: 7392f78c54ed85dfb1391b46b23a14dd29fc7514: X509.rsa 29fc7514 []
+```
+
 Also, this is how kdump acts if it is unable to verify it's kernel module:
 
 ```bash
@@ -105,4 +105,36 @@ kdump: Stopping kdump: [OK]
 kdump: Secure Boot is enabled. Using kexec file based syscall.
 kdump: kexec: loaded kdump kernel
 kdump: Starting kdump: [OK]
+```
+
+Another way to check the Secureboot functionality is with `bootctl` (this is from another system on VMware ESXi):
+
+```bash
+# bootctl
+System:
+     Firmware: n/a (n/a)
+  Secure Boot: enabled
+   Setup Mode: user
+
+Current Loader:
+      Product: n/a
+          ESP: n/a
+         File: └─n/a
+
+Boot Loader Binaries:
+          ESP: /boot/efi (/dev/disk/by-partuuid/d1a95d83-3dd0-4d69-b610-deda2b3b0cda)
+systemd-boot not installed in ESP.
+         File: └─/EFI/BOOT/BOOTX64.EFI
+
+Boot Loader Entries in EFI Variables:
+        Title: Rocky Linux
+           ID: 0x0003
+       Status: active, boot-order
+    Partition: /dev/disk/by-partuuid/d1a95d83-3dd0-4d69-b610-deda2b3b0cda
+         File: └─/EFI/rocky/shimx64.efi
+
+Default Boot Entry:
+Failed to open "/boot/efi/loader/loader.conf": No such file or directory
+Failed to read boot config from "/boot/efi/loader/loader.conf": No such file or directory
+Failed to load bootspec config from "/boot/efi/loader": No such file or directory
 ```
