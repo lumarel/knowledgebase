@@ -15,3 +15,11 @@
 - `pvresize /dev/sda3`
 - `lvextend -l +100%FREE /dev/mapper/lvmvol-root`
 - `resize2fs /dev/mapper/lvmvol-root`
+
+## Extend virtual disk lvm -> btrfs
+
+- `echo 1 > /sys/block/sda/device/rescan`
+- `growpart /dev/sda 3`
+- `pvresize /dev/sda3`
+- `lvextend -l +100%FREE /dev/mapper/lvmvol-root`
+- `btrfs filesystem resize max /`
