@@ -115,7 +115,7 @@ spec:
 ```
 
 - `kubectl apply -f awx.yml`
-- `kubectl logs -f deployments/awx-operator-controller-manager -c manager`
+- `kubectl logs -f deployments/awx-operator-controller-manager -c awx-manager`
 - `watch kubectl get ing,po,svc,pvc`
 
 ## Upgrade components
