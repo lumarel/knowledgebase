@@ -146,10 +146,10 @@ curl -LO https://projectcontour.io/quickstart/contour.yaml
 - Install antrea `kubectl apply -f antrea.yml`
 - Make sure that all antrea and coredns pods are running `watch kubectl get po -n kube-system`
 - Create the local-path-storage folder `mkdir -p /opt/local-path-provisioner`
-- Install the local-path-storage provider `kubectl apply -f local-path-storage.yml`
+- Install the local-path-storage provider `kubectl apply -f local-path-storage.yaml`
 - Make sure the pod is running and the storageclass got created `watch kubectl get sc`
 - Make this provider to the default one `kubectl patch sc local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'`
-- Install contour `kubectl apply -f contour.yml`
+- Install contour `kubectl apply -f contour.yaml`
 - Make sure that all contour pods are running `watch kubectl get po -n projectcontour`
 
 ## Install AWX
