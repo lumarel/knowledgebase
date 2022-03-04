@@ -14,7 +14,7 @@ These are the most basic tests which will be (if the time is there) run on every
 
 Like [these](https://pagure.io/fedora-qa/qa-misc/tree/master), or [these](https://pagure.io/fedora-qa/modularity_testing_scripts/tree/master), or [one of these](https://fedoraproject.org/wiki/Category:Test_Cases)
 
-- ISO repoclosure tests to verify all dependencies inside of a ISO and find broken ones
+- [ISO repoclosure tests](https://fedoraproject.org/wiki/QA:Testcase_Mediakit_Repoclosure) to verify all dependencies inside of a ISO and find broken ones
 - Basic ISO checksum tests, if these are needed?
 - More basic installs, maybe even inside of a chart, where every major possible options get's tested by somebody (BIOS, UEFI, platform (ESXi, KVM, Xen, Parallels, really old hardware, current hardware, really new hardware, ...), major package groups, + minor package groups, all ISOs, all current disk types, ...)
 - Check of basic system functions:
