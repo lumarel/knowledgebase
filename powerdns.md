@@ -230,7 +230,67 @@ d /run/powerdns-admin 0755 powerdnsadmin powerdnsadmin -
 - Reload systemd with `systemctl daemon-reload`
 - Start the systemd socket with `systemctl enable --now powerdns-admin.socket`
 - Start the systemd service with `systemctl enable --now powerdns-admin.service`
-- Configure nginx to proxy to the socket TBD
+- Add nginx configuration in `/etc/nginx/conf.d/powerdns-admin.conf`:
+
+```conf
+server {
+    listen                  80;
+    listen                  [::]:80;
+    server_name             <fqdn>;
+    return 301 https://$http_host$request_uri;
+}
+
+server {
+    listen                  443 ssl http2;
+    listen                  [::]:443 ssl http2;
+    server_name             <fqdn>;
+    index                   index.html index.htm;
+    error_log               /var/log/nginx/powerdns-admin.error.log;
+    access_log              /var/log/nginx/powerdns-admin.access.log;
+
+    ssl_certificate                 <path_to_your_fullchain_or_cert>;
+    ssl_certificate_key             <path_to_your_key>;
+    ssl_protocols                   TLSv1.2 TLSv1.3;
+    ssl_session_cache               shared:SSL:10m;
+
+    client_max_body_size            50m;
+    client_body_buffer_size         128k;
+    proxy_redirect                  off;
+    proxy_connect_timeout           720s;
+    proxy_send_timeout              720s;
+    proxy_read_timeout              720s;
+    proxy_buffers                   32 4k;
+    proxy_buffer_size               8k;
+    proxy_set_header                Host $http_host;
+    proxy_set_header                X-Scheme $scheme;
+    proxy_set_header                X-Real-IP $remote_addr;
+    proxy_set_header                X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_headers_hash_bucket_size  64;
+
+    location ~ ^/static/  {
+        include         mime.types;
+        root            /opt/web/powerdns-admin/powerdnsadmin;
+        location        ~* \.(jpg|jpeg|png|gif)$ { expires 365d; }
+        location        ~* ^.+.(css|js)$ { expires 7d; }
+    }
+
+    location ~ ^/upload/  {
+        include         mime.types;
+        root            /opt/web/powerdns-admin;
+        location        ~* \.(jpg|jpeg|png|gif)$ { expires 365d; }
+        location        ~* ^.+.(css|js)$ { expires 7d; }
+    }
+
+    location / {
+        proxy_pass              http://unix:/run/powerdns-admin/socket;
+        proxy_read_timeout      120;
+        proxy_connect_timeout   120;
+        proxy_redirect          http:// $scheme://;
+    }
+}
+```
+
+- `systemctl enable --now nginx`
 - `firewall-cmd --add-service={http,https}`
 - `firewall-cmd --add-service={http,https} --permanent`
 - Go to web-frontend and register initial user
@@ -240,7 +300,67 @@ d /run/powerdns-admin 0755 powerdnsadmin powerdnsadmin -
 
 - Install docker
 - `docker run -d -e SECRET_KEY='<secure-password>' -v pda-data:/data -p 9191:80 ngoduykhanh/powerdns-admin:latest`
-- Configure nginx to proxy to the socket TBD
+- Add nginx configuration in `/etc/nginx/conf.d/powerdns-admin.conf`:
+
+```conf
+server {
+    listen                  80;
+    listen                  [::]:80;
+    server_name             <fqdn>;
+    return 301 https://$http_host$request_uri;
+}
+
+server {
+    listen                  443 ssl http2;
+    listen                  [::]:443 ssl http2;
+    server_name             <fqdn>;
+    index                   index.html index.htm;
+    error_log               /var/log/nginx/powerdns-admin.error.log;
+    access_log              /var/log/nginx/powerdns-admin.access.log;
+
+    ssl_certificate                 <path_to_your_fullchain_or_cert>;
+    ssl_certificate_key             <path_to_your_key>;
+    ssl_protocols                   TLSv1.2 TLSv1.3;
+    ssl_session_cache               shared:SSL:10m;
+
+    client_max_body_size            50m;
+    client_body_buffer_size         128k;
+    proxy_redirect                  off;
+    proxy_connect_timeout           720s;
+    proxy_send_timeout              720s;
+    proxy_read_timeout              720s;
+    proxy_buffers                   32 4k;
+    proxy_buffer_size               8k;
+    proxy_set_header                Host $http_host;
+    proxy_set_header                X-Scheme $scheme;
+    proxy_set_header                X-Real-IP $remote_addr;
+    proxy_set_header                X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_headers_hash_bucket_size  64;
+
+    location ~ ^/static/  {
+        include         mime.types;
+        root            /opt/web/powerdns-admin/powerdnsadmin;
+        location        ~* \.(jpg|jpeg|png|gif)$ { expires 365d; }
+        location        ~* ^.+.(css|js)$ { expires 7d; }
+    }
+
+    location ~ ^/upload/  {
+        include         mime.types;
+        root            /opt/web/powerdns-admin;
+        location        ~* \.(jpg|jpeg|png|gif)$ { expires 365d; }
+        location        ~* ^.+.(css|js)$ { expires 7d; }
+    }
+
+    location / {
+        proxy_pass              http://unix:/run/powerdns-admin/socket;
+        proxy_read_timeout      120;
+        proxy_connect_timeout   120;
+        proxy_redirect          http:// $scheme://;
+    }
+}
+```
+
+- `systemctl enable --now nginx`
 - `firewall-cmd --add-service={http,https}`
 - `firewall-cmd --add-service={http,https} --permanent`
 - Go to web-frontend and register initial user
