@@ -2,6 +2,8 @@
 
 ## pdns - cluster - primary
 
+[Documentation source](https://doc.powerdns.com/authoritative/)
+
 - `dnf install dnf-utils setroubleshoot-server epel-release`
 - `dnf config-manager --enable powertools`
 - `dnf config-manager --add-repo https://repo.powerdns.com/repo-files/el-auth-46.repo`
@@ -35,10 +37,9 @@ exit
 ```conf
 api=yes
 api-key=<secure-api-key>
-default-soa-content=<hostname-of-primary> <hostname-of-hostmaster-record>.@ 0 10800 3600 604800 3600
+default-soa-content=<fqdn-of-primary> <hostname-of-hostmaster-record>.@ 0 10800 3600 604800 3600
+default-soa-edit=INCEPTION-INCREMENT
 launch=gpgsql
-local-address=127.0.0.1, ::1
-local-port=5300
 primary=yes
 webserver-address=0.0.0.0
 webserver-allow-from=<powerdns-admin-ip>
@@ -51,6 +52,90 @@ gpgsql-dnssec=yes
 
 - `chown pdns:pdns /etc/pdns/pdns.conf`
 - `systemctl enable --now pdns`
+- `firewall-cmd --add-service=dns`
+- `firewall-cmd --add-service=dns --permanent`
+- `firewall-cmd --add-port=8081/tcp`
+- `firewall-cmd --add-port=8081/tcp --permanent`
+- `pdnsutil create-zone <domain>`
+- `pdnsutil set-kind <domain> primary`
+- `pdnsutil set-meta <domain> API-RECTIFY 1`
+- `pdnsutil set-meta <domain> SOA-EDIT-API DEFAULT`
+- Edit the zone content with `EDITOR=vi pdnsutil edit-zone <domain>`:
+
+```text
+; Warning - every name in this file is ABSOLUTE!
+$ORIGIN .
+<domain>            3600    IN      SOA     <fqdn-of-primary> <fqdn-of-hostmaster-record> 0 10800 3600 604800 3600
+<domain>            60      IN      NS      <fqdn-of-primary>
+<domain>            60      IN      NS      <fqdn-of-secondary>
+<fqdn-of-primary>   60      IN      A       <ip-of-primary>
+<fqdn-of-secondary> 60      IN      A       <ip-of-primary>
+```
+
+- `pdnsutil secure-zone <domain>`
+- `pdnsutil generate-tsig-key <keyname> <hmac-md5|hmac-shaX>`
+- `pdnsutil activate-tsig-key <domain-to-sign> <keyname> primary`
+
+## pdns - cluster - secondary
+
+[Documentation source](https://doc.powerdns.com/authoritative/)
+
+- `dnf install dnf-utils setroubleshoot-server epel-release`
+- `dnf config-manager --enable powertools`
+- `dnf config-manager --add-repo https://repo.powerdns.com/repo-files/el-auth-46.repo`
+- `dnf module enable postgresql:13`
+- `dnf install postgresql-server`
+- `postgresql-setup --initdb`
+- Change the authentication type in `/var/lib/pgsql/data/pg_hba.conf` from `ident` to `md5` for the local connections
+- `systemctl enable --now postgresql`
+- `dnf install pdns pdns-backend-postgresql`
+- Create and populate the database:
+
+```bash
+su - postgres
+psql
+create database pdns;
+\q
+pqsl pdns < /usr/share/doc/pdns-backend-postgresql/schema.pgsql.sql
+psql
+\c pdns
+create user pdns with password '<secure-password>';
+grant all on database pdns to pdns;
+grant all on all tables in schema public to pdns;
+grant all on all sequences in schema public to pdns;
+\c postgres
+\q
+exit
+```
+
+- Change/Add the following parameters in `/etc/pdns/pdns.conf`:
+
+```conf
+api=yes
+api-key=<secure-api-key>
+default-soa-content=<fqdn-of-secondary> <hostname-of-hostmaster-record>.@ 0 10800 3600 604800 3600
+default-soa-edit=INCEPTION-INCREMENT
+launch=gpgsql
+secondary=yes
+webserver-address=0.0.0.0 # (optional)
+webserver-allow-from=<powerdns-admin-ip> # (optional)
+gpgsql-host=127.0.0.1
+gpgsql-dbname=pdns
+gpgsql-user=pdns
+gpgsql-password=<secure-password>
+gpgsql-dnssec=yes
+```
+
+- `chown pdns:pdns /etc/pdns/pdns.conf`
+- `systemctl enable --now pdns`
+- `firewall-cmd --add-service=dns`
+- `firewall-cmd --add-service=dns --permanent`
+- `firewall-cmd --add-port=8081/tcp`
+- `firewall-cmd --add-port=8081/tcp --permanent`
+- `pdnsutil create-secondary-zone <domain> <ip-of-primary>`
+- `pdnsutil import-tsig-key <keyname> <hmac-md5|hmac-shaX> '<base64-encoded-secret>'`
+- `pdnsutil activate-tsig-key <domain-to-sign> <keyname> secondary`
+- Make a change on the primary or run `pdnsutil notify <domain>` on the primary
 
 ## PowerDNS-Admin
 
@@ -149,3 +234,14 @@ d /run/powerdns-admin 0755 powerdnsadmin powerdnsadmin -
 - `firewall-cmd --add-service={http,https}`
 - `firewall-cmd --add-service={http,https} --permanent`
 - Go to web-frontend and register initial user
+- Configure the connection to the powerdns system using the URI (port 8081), secret and version
+
+## PowerDNS-Admin - easy-mode
+
+- Install docker
+- `docker run -d -e SECRET_KEY='<secure-password>' -v pda-data:/data -p 9191:80 ngoduykhanh/powerdns-admin:latest`
+- Configure nginx to proxy to the socket TBD
+- `firewall-cmd --add-service={http,https}`
+- `firewall-cmd --add-service={http,https} --permanent`
+- Go to web-frontend and register initial user
+- Configure the connection to the powerdns system using the URI (port 8081), secret and version
