@@ -139,6 +139,8 @@ gpgsql-dnssec=yes
 
 ## PowerDNS-Admin
 
+Documentation source: [here](https://github.com/PowerDNS-Admin/PowerDNS-Admin/wiki/Using-PowerDNS-Admin-with-PostgreSQL), [here](https://github.com/PowerDNS-Admin/PowerDNS-Admin/wiki/Running-PowerDNS-Admin-on-Fedora-30) and [here](https://github.com/PowerDNS-Admin/PowerDNS-Admin/wiki/Running-PowerDNS-Admin-with-Systemd,-Gunicorn--and--Nginx)
+
 - `dnf install dnf-utils setroubleshoot-server`
 - `dnf config-manager --enable powertools`
 - `dnf module enable postgresql:13`
@@ -297,6 +299,8 @@ server {
 - Configure the connection to the powerdns system using the URI (port 8081), secret and version
 
 ## PowerDNS-Admin - easy-mode
+
+Documentation source: [here](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/README.md#running-powerdns-admin) and [here](https://github.com/PowerDNS-Admin/PowerDNS-Admin/wiki/Running-PowerDNS-Admin-with-Systemd,-Gunicorn--and--Nginx)
 
 - Install docker
 - `docker run -d -e SECRET_KEY='<secure-password>' -v pda-data:/data -p 9191:80 ngoduykhanh/powerdns-admin:latest`
