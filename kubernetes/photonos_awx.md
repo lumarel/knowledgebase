@@ -124,6 +124,7 @@ spec:
 
 - `cd awx-operator`
 - `git reset --hard devel`
+- `git fetch --all`
 - `git checkout tags/0.14.0`
 - `make deploy`
 - `kubectl logs -f deployments/awx-operator-controller-manager -c manager`
