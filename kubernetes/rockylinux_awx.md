@@ -221,6 +221,7 @@ EOF
 - `cd awx-operator`
 - `git reset --hard devel`
 - `git checkout tags/<latest-version>`
+- `export NAMESPACE=default`
 - `make deploy`
 - `kubectl logs -f deployments/awx-operator-controller-manager -c awx-manager`
 - `watch kubectl get ing,po,svc,pvc`
