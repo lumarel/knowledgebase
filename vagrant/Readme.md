@@ -1,6 +1,8 @@
 # Vagrant Base Box creation process
 
-## Create VM image
+## VMware
+
+### Create VM image
 
 - Create a ISO with the label `OEMDRV` with the [kickstart file](https://git.rockylinux.org/rocky/kickstarts/-/blob/r8/Rocky-8-x86_64-Vagrant.ks) `ks.cfg` in it (make sure the file has Linux file endings!)
 - Create VM hull through VMware Workstation UI
@@ -26,7 +28,7 @@
 - After the automatic shutdown go to the Hard disk settings and compact the disk
 - Remove machine from VMware Workstation
 
-## Prepare image for distribution
+### Prepare image for distribution
 
 - Replace vmx config with `distribute.vmx` while not overwriting the `bios.uuid` and `bios.location`
 - Remove all files beside `*.nvram`, `*.vmdk`, `*.vmsd`, `*.vmx`
