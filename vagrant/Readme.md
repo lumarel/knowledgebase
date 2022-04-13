@@ -30,7 +30,7 @@
 
 ### Prepare image for distribution
 
-- Replace vmx config with `distribute.vmx` while not overwriting the `bios.uuid` and `bios.location`
+- Replace vmx config with `distribute.vmx` while not overwriting the `bios.uuid` and `bios.location` properties
 - Remove all files beside `*.nvram`, `*.vmdk`, `*.vmsd`, `*.vmx`
 - Add metadata.json and VagrantFile to the folder
 - Place current directory into the root of the VM
