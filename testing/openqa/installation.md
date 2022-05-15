@@ -5,7 +5,7 @@
 Firewall settings on workers:
 
 ```bash
-firewall-cmd --add-ports={5991-5994,20000-20100}/tcp --permanent
+firewall-cmd --add-port={5991-5994,20000-20100}/tcp --permanent
 firewall-cmd --reload
 ```
 
