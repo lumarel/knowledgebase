@@ -12,7 +12,7 @@ firewall-cmd --reload
 Firewall settings on master:
 
 ```bash
-firewall-cmd --add-ports=5991-5994/tcp --permanent
+firewall-cmd --add-port=5991-5994/tcp --permanent
 firewall-cmd --reload
 ```
 
