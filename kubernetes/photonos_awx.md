@@ -2,6 +2,8 @@
 
 [https://virtual-bytes.co.uk/2021/05/06/deploying-ansible-awx-on-kubernetes-from-day-0](https://virtual-bytes.co.uk/2021/05/06/deploying-ansible-awx-on-kubernetes-from-day-0/)
 
+## *This guide is outdated, since at least Kubernetes 1.24*
+
 ## Deploy VM
 
 - Deploy PhotonOS 4.0 ISO with 4 cores, 8Gi of memory, 50Gi of storage
