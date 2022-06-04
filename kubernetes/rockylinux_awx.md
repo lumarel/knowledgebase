@@ -19,19 +19,9 @@
 ```bash
 modprobe br_netfilter
 modprobe overlay
-modprobe ip_vs
-modprobe ip_vs_rr
-modprobe ip_vs_wrr
-modprobe ip_vs_sh
-modprobe nf_conntrack
 cat <<EOF | tee /etc/modules-load.d/k8s_kernel_modules.conf
 overlay
 br_netfilter
-ip_vs
-ip_vs_rr
-ip_vs_wrr
-ip_vs_sh
-nf_conntrack
 
 EOF
 ```
@@ -50,34 +40,15 @@ net.ipv4.ip_forward=1
 EOF
 ```
 
-- Add the docker repo `dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo`
-- Install docker `dnf install docker-ce`
-- Configure the docker application with `mkdir -p /etc/docker` and add the following content:
+- Add the 2 cri-o repos:
 
 ```bash
-cat <<EOF | tee /etc/docker/daemon.json
-{
-  "exec-opts": ["native.cgroupdriver=systemd"],
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "100m"
-  },
-  "storage-driver": "overlay2",
-  "storage-opts": [
-    "overlay2.override_kernel_check=true"
-  ],
-  "insecure-registries": [
-     "k8s.gcr.io",
-     "docker.io",
-     "quay.io",
-     "registry.access.redhat.com"
-  ]
-}
-
-EOF
+curl -L -o /etc/yum.repos.d/devel:kubic:libcontainers:stable.repo https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/CentOS_8/devel:kubic:libcontainers:stable.repo
+curl -L -o /etc/yum.repos.d/devel:kubic:libcontainers:stable:cri-o:<latest-version>.repo https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:<latest-version>/CentOS_8/devel:kubic:libcontainers:stable:cri-o:<latest-version>.repo
 ```
 
-- Enable the docker service `systemctl enable --now docker`
+- Install cri-o `dnf install cri-o cri-tools`
+- Enable the cri-o service `systemctl enable --now crio`
 - Add the kubernetes repo:
 
 ```bash
@@ -99,11 +70,11 @@ EOF
 ```bash
 cat <<EOF | tee ~/kubeconfig.yml
 ---
-apiVersion: kubeadm.k8s.io/v1beta2
+apiVersion: kubeadm.k8s.io/v1beta3
 kind: InitConfiguration
 
 ---
-apiVersion: kubeadm.k8s.io/v1beta2
+apiVersion: kubeadm.k8s.io/v1beta3
 kind: ClusterConfiguration
 kubernetesVersion: v<current-kubeadm-version>
 networking:
@@ -124,8 +95,14 @@ cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 chown $(id -u):$(id -g) $HOME/.kube/config
 ```
 
-- Remove the node taints for the single-node-cluster `kubectl taint nodes --all node-role.kubernetes.io/master-`
-- Make sure all pods except the 2 coredns ones are running
+- Remove the node taints for the single-node-cluster:
+
+```bash
+kubectl taint nodes --all node-role.kubernetes.io/master-
+kubectl taint nodes --all node-role.kubernetes.io/control-plane-
+```
+
+- Make sure all pods *except* the 2 coredns ones are running
 - Do `systemctl edit kubelet.service` and write the following into the spacing section
 
 ```ini
@@ -154,19 +131,47 @@ curl -LO https://projectcontour.io/quickstart/contour.yaml
 
 ## Install AWX
 
-- Install missing packages `dnf install git make`
-- Clone the awx-operator `git clone https://github.com/ansible/awx-operator.git`
-- Checkout the latest release `cd awx-operator` and `git checkout tags/<latest-version>`
-- Set the namespace in which the awx-operator and awx will be deployed `export NAMESPACE=default`
-- Deploy the awx-operator `make deploy`
-- Make sure the operator is running `watch kubectl get po`
+- Install missing packages `dnf install git`
+- Download the latest kustomize version from the [Github releases page](https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2Fv<latest-version)
+- Unpack, make it a executable and move it to `/usr/local/bin`:
+
+```bash
+curl -LO https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv<latest-version>/kustomize_v<latest-version>_linux_amd64.tar.gz
+tar xzvf kustomize_v<latest-version>_linux_amd64.tar.gz
+chmod +x kustomize
+mv kustomize /usr/local/bin
+```
+
 - Either create a new self-signed certificate (`openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out ingress-tls.crt -keyout ingress-tls.key -subj "/CN=<awx-fqdn>/O=awx-ingress-tls"`) or copy a real one to the machine (ingress-tls.crt and ingress-tls.key need to be only the server certificate without an empty line)
 - Import the certificate into kubernetes `kubectl create secret tls awx-ingress-tls --key ingress-tls.key --cert ingress-tls.crt`
 - Download the root certificate and import it:
 
 ```bash
-curl -O http://certificates.fritz.box/rootca_public.crt
+curl -O http://<crl-fqdn>/rootca_public.crt
 kubectl create secret generic awx-custom-certs --from-file=bundle-ca.crt=/root/rootca_public.crt
+```
+
+- Create the Kustomize config file:
+
+```bash
+cat <<EOF | tee ~/kustomization.yaml
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  # Find the latest tag here: https://github.com/ansible/awx-operator/releases
+  - github.com/ansible/awx-operator/config/default?ref=<latest-version>
+  - awx.yml
+
+# Set the image tags to match the git version from above
+images:
+  - name: quay.io/ansible/awx-operator
+    newTag: <latest-version>
+
+# Specify a custom namespace in which to install AWX
+namespace: default
+
+EOF
 ```
 
 - Create the AWX config file for Kubernetes:
@@ -210,7 +215,8 @@ spec:
 EOF
 ```
 
-- Deploy the AWX with `kubectl apply -f ~/awx.yml`
+- Install the awx-operator (run this step twice) `kustomize build . | kubectl apply -f -`
+- Make sure the operator is running `watch kubectl get po`
 - Make sure the pods got deployed with `kubectl logs -f deployments/awx-operator-controller-manager -c awx-manager`
 - And `watch kubectl get ing,po,svc,pvc`
 
@@ -218,11 +224,8 @@ EOF
 
 ### Ansible AWX Upgrade
 
-- `cd awx-operator`
-- `git reset --hard devel`
-- `git checkout tags/<latest-version>`
-- `export NAMESPACE=default`
-- `make deploy`
+- Change the version in the kustomization.yaml file
+- Rerun `kustomize build . | kubectl apply -f -`
 - `kubectl logs -f deployments/awx-operator-controller-manager -c awx-manager`
 - `watch kubectl get ing,po,svc,pvc`
 
