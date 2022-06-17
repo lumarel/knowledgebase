@@ -24,3 +24,11 @@ Like [these](https://pagure.io/fedora-qa/qa-misc/tree/master), or [these](https:
   - failed services
 - Modularity checks (not sure how, but maybe some installations -> reset -> upgrade tests)
 - Per application guides and tests
+
+## Troubleshooting tools
+
+Rpaste / [https://rpa.st](https://rpa.st)
+
+- `cat </path/to/file> | rpaste`
+- `curl -X POST https://rpa.st/curl -F 'raw=@</path/to/file>'`
+- `cat </path/to/file> | curl -X POST https://rpa.st/curl -F 'raw=<-'`
