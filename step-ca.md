@@ -148,7 +148,44 @@ export STEP_CA_URL=https://subca01.example.com
 export STEP_ROOT=/etc/step-ca/certs/root_ca.crt
 ```
 
-## Active revocation
+## Production considerations
+
+### PostgreSQL as database
+
+- Before installing setup a PostgreSQL database:
+
+```bash
+dnf module enable postgresql:13
+dnf install postgresql-server
+postgresql-setup initdb
+```
+
+- Change the 2 `host all all` lines from ident to `md5` (unfortunately `scram-sha-256` does not work)
+
+```bash
+systemctl enable --now postgresql
+sudo -u postgres psql
+```
+
+- And inside psql run:
+
+```sql
+create database stepca;
+create user stepca with encrypted password '<strong-password>';
+grant all privileges on database stepca to stepca;
+```
+
+- After the init, change the db settings in `~/.step/config/ca.json`:
+
+```json
+"db": {
+  "type": "postgresql",
+  "dataSource": "postgresql://stepca:<strong-password>@127.0.0.1:5432/",
+  "database": "stepca"
+}
+```
+
+### Active revocation
 
 [Enable Active Revocation](https://smallstep.com/docs/step-ca/certificate-authority-server-production#enable-active-revocation-on-your-intermediate-ca)
 
@@ -206,3 +243,9 @@ step certificate create <subject-of-cert> intermediate.csr ~/.step/secrets/inter
 - If a certificate needs to be revoked manually enter it in the index.txt file and renew the CRL
 
 The CRL will expire, so don't forget to renew it manually or automatically from time to time!
+
+## Links for operation
+
+- [badger database cleanup](https://github.com/smallstep/certificates/issues/473)
+- [logging/certificate reading from database](https://github.com/smallstep/certificates/issues/239)
+- [soon tm real active CRL function](https://github.com/smallstep/certificates/pull/731)
