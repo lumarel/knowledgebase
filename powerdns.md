@@ -165,7 +165,7 @@ exit
 - `npm install yarn -g`
 - `mkdir -p /opt/web`
 - `cd /opt/web`
-- `git clone https://github.com/ngoduykhanh/PowerDNS-Admin.git powerdns-admin`
+- `git clone https://github.com/PowerDNS-Admin/PowerDNS-Admin.git powerdns-admin`
 - `cd /opt/web/powerdns-admin`
 - `virtualenv -p python3 flask`
 - `. ./flask/bin/activate`
@@ -297,6 +297,28 @@ server {
 - `firewall-cmd --add-service={http,https} --permanent`
 - Go to web-frontend and register initial user
 - Configure the connection to the powerdns system using the URI (port 8081), secret and version
+
+## Update PowerDNS-Admin
+
+- `systemctl stop powerdns-admin.service`
+- `systemctl stop powerdns-admin.socket`
+- `npm update yarn -g`
+- `cd /opt/web/powerdns-admin`
+- If not needed anymore restore the default file in the `powerdnsadmin` directory with `git restore powerdnsadmin/default_config.py`
+- `git fetch`
+- `git pull`
+- `. ./flask/bin/activate`
+- `python3 -m pip install -U python-dotenv`
+- `python3 -m pip install -U psycopg2`
+- `python3 -m pip install -U -r requirements.txt`
+- `export FLASK_APP=powerdnsadmin/__init__.py`
+- `export FLASK_CONF=../configs/production.py`
+- `flask db upgrade`
+- `yarn upgrade --pure-lockfile`
+- `flask assets build`
+- `chown -R powerdnsadmin:powerdnsadmin /opt/web/powerdns-admin`
+- `systemctl start powerdns-admin.socket`
+- `systemctl start powerdns-admin.service`
 
 ## PowerDNS-Admin - easy-mode
 
