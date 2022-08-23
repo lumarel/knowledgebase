@@ -263,3 +263,7 @@ kubectl logs -n kube-system antrea-agent-<key> -c antrea-agent
 ```bash
 kubectl logs -n projectcontour deployment/contour --all-containers -f
 ```
+
+### Local Path Provisioner is unable to create pv's
+
+Most likely it's because SELinux is misbehaving.
