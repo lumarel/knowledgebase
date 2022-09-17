@@ -30,11 +30,27 @@
 
 ### Prepare image for distribution
 
-- Replace vmx config with `distribute.vmx` while not overwriting the `scsi0.sasWWID`, `bios.uuid` and `bios.location` properties
-- Remove all files beside `*.nvram`, `*.vmdk`, `*.vmsd`, `*.vmx`
-- Add metadata.json and VagrantFile to the folder
+- Replace vmx config with `distribute.vmx`
+- Remove all files beside `*.vmdk` and `*.vmx`
+- Add `metadata.json` and `VagrantFile` to the folder
 - Place current directory into the root of the VM
 - `tar cvzf ..\rockylinux-8.5-x86_64.box .\*`
+
+### Differently
+
+If the kickstart ISOs and a donor vmdk is already available it even shrinks the whole process to a bare minimum:
+
+- Create directory for new vm `mkdir -p ~/vmware/rockylinux-9.0-x86_64`
+- Copy donor vmdk file to this directory as `rockylinux-9.0-x86_64.vmdk`
+- Copy `install.vmx` to this directory as `rockylinux-9.0-x86_64.vmx`
+- Set the `displayName`, `nvram`, `scsi0:0.fileName`, `ide0:0.fileName` and `ide1:0.fileName` properties
+- Run `vmware -qx ~/vmware/rockylinux-9.0-x86_64/rockylinux-9.0-x86_64.vmx` and wait until it closes again (it will exit the process if VMware Workstation was closed)
+- Overwrite `rockylinux-9.0-x86_64.vmx` with `distribute.vmx`
+- Set the `displayName`, `nvram` and `scsi0:0.fileName` properties
+- Remove all files beside `*.vmdk` and `*.vmx`
+- Add `metadata.json` and `VagrantFile` to the folder
+- Place current directory into the root of the VM
+- `tar cvzf ..\rockylinux-9.0-x86_64.box .\*`
 
 ## Testing the image
 
