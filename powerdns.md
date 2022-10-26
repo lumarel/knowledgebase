@@ -20,7 +20,7 @@ su - postgres
 psql
 create database pdns;
 \q
-pqsl pdns < /usr/share/doc/pdns-backend-postgresql/schema.pgsql.sql
+psql pdns < /usr/share/doc/pdns-backend-postgresql/schema.pgsql.sql
 psql
 \c pdns
 create user pdns with password '<secure-password>';
@@ -96,7 +96,7 @@ su - postgres
 psql
 create database pdns;
 \q
-pqsl pdns < /usr/share/doc/pdns-backend-postgresql/schema.pgsql.sql
+psql pdns < /usr/share/doc/pdns-backend-postgresql/schema.pgsql.sql
 psql
 \c pdns
 create user pdns with password '<secure-password>';
@@ -135,7 +135,7 @@ gpgsql-dnssec=yes
 - `pdnsutil create-secondary-zone <domain> <ip-of-primary>`
 - `pdnsutil import-tsig-key <keyname> <hmac-md5|hmac-shaX> '<base64-encoded-secret>'`
 - `pdnsutil activate-tsig-key <domain-to-sign> <keyname> secondary`
-- Make a change on the primary or run `pdnsutil notify <domain>` on the primary
+- Make a change on the primary or run `pdns_control notify <domain>` on the primary
 
 ## PowerDNS-Admin
 
