@@ -1,6 +1,6 @@
 # SystemD operations
 
-## Override parameters (e.g. docker engine)
+## Override parameters (i.e. docker engine)
 
 Run `systemctl edit docker.service` and add the content
 
