@@ -1,5 +1,8 @@
 # Ansible AWX installation on Minikube
 
+[!WARNING]
+Deprecated guide
+
 ## System setup
 
 - Install CentOS 8 machine with local wheel user

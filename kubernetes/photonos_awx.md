@@ -1,5 +1,8 @@
 # Ansible AWX on a Single node Kubernetes cluster on PhotonOS 4
 
+[!WARNING]
+Deprecated guide
+
 [https://virtual-bytes.co.uk/2021/05/06/deploying-ansible-awx-on-kubernetes-from-day-0](https://virtual-bytes.co.uk/2021/05/06/deploying-ansible-awx-on-kubernetes-from-day-0/)
 
 ## *This guide is outdated, since at least Kubernetes 1.24*

@@ -1,15 +1,18 @@
 # Ansible AWX on a Single node Kubernetes cluster on Rocky Linux 8
 
+[!NOTE]
+This guide also applies to Rocky Linux 9
+
 ## Deploy VM
 
 - Deploy Rocky Linux 8 ISO with 4 cores, 12Gi of memory, 50Gi of storage
-- Configure A record for machine and CNAME record for AWX on DNS server
-- On install configure fqdn as hostname and given static IP address
+- Configure an A record for the machine and a CNAME record for AWX on your DNS server
+- On install configure the fqdn as hostname and given static IP address
 - Also configure the NTP server in Anaconda
-- Install system helper tools `dnf install dnf-utils setroubleshoot-server`
+- Install system helper tools `dnf install dnf-utils setroubleshoot-server` for ongoing troubleshooting
 - Do all updates with `dnf update`
 - Disable swap with `swapoff -a` and remove the configuration from the fstab
-- Disable the firewall, don't have a solution for enabled firewall up to now
+- Disable the firewall with `systemctl disable --now firewalld`, don't have a solution for enabled firewall up to now
 - Reboot
 
 ## Install Kubernetes
@@ -43,8 +46,8 @@ EOF
 - Add the 2 cri-o repos:
 
 ```bash
-curl -L -o /etc/yum.repos.d/devel:kubic:libcontainers:stable.repo https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/CentOS_8/devel:kubic:libcontainers:stable.repo
-curl -L -o /etc/yum.repos.d/devel:kubic:libcontainers:stable:cri-o:<latest-version>.repo https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:<latest-version>/CentOS_8/devel:kubic:libcontainers:stable:cri-o:<latest-version>.repo
+curl -Lo /etc/yum.repos.d/devel:kubic:libcontainers:stable.repo https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/CentOS_8/devel:kubic:libcontainers:stable.repo
+curl -Lo /etc/yum.repos.d/devel:kubic:libcontainers:stable:cri-o:<latest-version>.repo https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:<latest-version>/CentOS_8/devel:kubic:libcontainers:stable:cri-o:<latest-version>.repo
 ```
 
 - Install cri-o `dnf install cri-o cri-tools`
@@ -70,11 +73,11 @@ EOF
 ```bash
 cat <<EOF | tee ~/kubeconfig.yml
 ---
-apiVersion: kubeadm.k8s.io/v1beta3
+apiVersion: kubeadm.k8s.io/v1beta4
 kind: InitConfiguration
 
 ---
-apiVersion: kubeadm.k8s.io/v1beta3
+apiVersion: kubeadm.k8s.io/v1beta4
 kind: ClusterConfiguration
 kubernetesVersion: v<current-kubeadm-version>
 networking:
@@ -132,7 +135,7 @@ curl -LO https://projectcontour.io/quickstart/contour.yaml
 ## Install AWX
 
 - Install missing packages `dnf install git`
-- Download the latest kustomize version from the [Github releases page](https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2Fv<latest-version)
+- Download the latest kustomize version from the [Github releases page](https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2Fv<latest-version>)
 - Unpack, make it a executable and move it to `/usr/local/bin`:
 
 ```bash
@@ -142,7 +145,7 @@ chmod +x kustomize
 mv kustomize /usr/local/bin
 ```
 
-- Either create a new self-signed certificate (`openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out ingress-tls.crt -keyout ingress-tls.key -subj "/CN=<awx-fqdn>/O=awx-ingress-tls"`) or copy a real one to the machine (ingress-tls.crt and ingress-tls.key need to be only the server certificate without an empty line)
+- Either create a new self-signed certificate (`openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out ingress-tls.crt -keyout ingress-tls.key -subj "/CN=<awx-fqdn>/O=awx-ingress-tls"`) or copy a ca signed one to the machine (ingress-tls.crt and ingress-tls.key need to be only the server certificate without an empty line)
 - Import the certificate into kubernetes `kubectl create secret tls awx-ingress-tls --key ingress-tls.key --cert ingress-tls.crt`
 - Download the root certificate and import it:
 
@@ -196,6 +199,7 @@ spec:
   ingress_type: Ingress
   hostname: <awx-fqdn>
   ingress_tls_secret: awx-ingress-tls
+  ingress_controller: contour
   web_resource_requirements:
     requests:
       cpu: 400m
@@ -264,6 +268,6 @@ kubectl logs -n kube-system antrea-agent-<key> -c antrea-agent
 kubectl logs -n projectcontour deployment/contour --all-containers -f
 ```
 
-### Local Path Provisioner is unable to create pv's
+### Local Path Provisioner is unable to create pv's or applications using a pvc can't write
 
 Most likely it's because SELinux is misbehaving.
