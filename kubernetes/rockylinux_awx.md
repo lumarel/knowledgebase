@@ -73,11 +73,11 @@ EOF
 ```bash
 cat <<EOF | tee ~/kubeconfig.yml
 ---
-apiVersion: kubeadm.k8s.io/v1beta4
+apiVersion: kubeadm.k8s.io/v1beta3
 kind: InitConfiguration
 
 ---
-apiVersion: kubeadm.k8s.io/v1beta4
+apiVersion: kubeadm.k8s.io/v1beta3
 kind: ClusterConfiguration
 kubernetesVersion: v<current-kubeadm-version>
 networking:
