@@ -226,6 +226,27 @@ EOF
 
 ## Upgrade components
 
+### Kubernetes Upgrade
+
+[!WARNING]
+Upgrading a single node kubernetes cluster is always a play with the fire, make sure you always make backups/snapshots before the operation!
+
+#### OS updates
+
+- Stop the kubelet, which makes sure etcd doesn't corrupt `systemctl stop kubelet`
+- Any update operation, like `dnf update`
+- Start kubelet again `systemctl start kubelet`
+- Check with `journalctl -f` if the containers are coming up normally again and if the CNI configures the network in a working state again
+- If a restart is needed, stop kubelet again and restart (sometimes only a restart gets the system working again)
+
+#### Kubernetes cluster version updates
+
+This is only possible if the kubeadm version has progressed, it's only possible to upgrade to versions lower than or exactly the kubeadm version.
+
+- Check for updates `kubeadm upgrade plan`
+- The plan will tell you what is possible to be upgraded (this might show incorrect options, that don't work with your kubeadm version)
+- Upgrade to the wanted version with `kubeadm upgrade apply v<cluster-version>`
+
 ### Ansible AWX Upgrade
 
 - Change the version in the kustomization.yaml file
@@ -271,3 +292,4 @@ kubectl logs -n projectcontour deployment/contour --all-containers -f
 ### Local Path Provisioner is unable to create pv's or applications using a pvc can't write
 
 Most likely it's because SELinux is misbehaving.
+Could be that you have to set SELinux to permissive mode overall... which is sad.
