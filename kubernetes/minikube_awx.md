@@ -1,7 +1,7 @@
 # Ansible AWX installation on Minikube
 
-[!WARNING]
-Deprecated guide
+> [!WARNING]
+> Deprecated guide
 
 ## System setup
 

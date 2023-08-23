@@ -1,7 +1,7 @@
 # Ansible AWX on a Single node Kubernetes cluster on Rocky Linux 8
 
-[!NOTE]
-This guide also applies to Rocky Linux 9
+> [!NOTE]
+> This guide also applies to Rocky Linux 9
 
 ## Deploy VM
 
@@ -228,8 +228,8 @@ EOF
 
 ### Kubernetes Upgrade
 
-[!WARNING]
-Upgrading a single node kubernetes cluster is always a play with the fire, make sure you always make backups/snapshots before the operation!
+> [!WARNING]
+> Upgrading a single node kubernetes cluster is always a play with the fire, make sure you always make backups/snapshots before the operation!
 
 #### OS updates
 
