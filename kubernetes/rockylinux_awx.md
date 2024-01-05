@@ -148,6 +148,7 @@ curl -LO https://projectcontour.io/quickstart/contour.yaml
 curl -LO https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv<latest-version>/kustomize_v<latest-version>_linux_amd64.tar.gz
 tar xzvf kustomize_v<latest-version>_linux_amd64.tar.gz
 chmod +x kustomize
+chown root: kustomize
 mv kustomize /usr/local/bin
 ```
 
