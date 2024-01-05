@@ -253,6 +253,26 @@ This is only possible if the kubeadm version has progressed, it's only possible 
 - The plan will tell you what is possible to be upgraded (this might show incorrect options, that don't work with your kubeadm version)
 - Upgrade to the wanted version with `kubeadm upgrade apply v<cluster-version>`
 
+#### Project repo path switch
+
+The kubernetes project moved from it's home at Google to a community owned location:
+
+[https://kubernetes.io/blog/2023/10/10/cri-o-community-package-infrastructure/](https://kubernetes.io/blog/2023/10/10/cri-o-community-package-infrastructure/)
+
+This means 2 things:
+
+- The repos for both kubernetes and cri-o switched to a different location, look for the exact paths in the guide above
+- If you are using cri-o you will have to do a tricky switch, aka you will need to uninstall cri-o and then reinstall it again, as there are file/dependency conflicts between the old and new cri-o version (the whole runtime got merged into the cri-o package now):
+
+```bash
+systemctl stop kubelet
+dnf remove containers-common
+dnf module reset container-tools
+dnf install cri-o
+systemctl enable --now crio
+systemctl start kubelet
+```
+
 ### Ansible AWX Upgrade
 
 - Change the version in the kustomization.yaml file
