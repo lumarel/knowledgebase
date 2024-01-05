@@ -43,31 +43,37 @@ net.ipv4.ip_forward=1
 EOF
 ```
 
-- Add the 2 cri-o repos:
+- Add the cri-o repo:
 
 ```bash
-curl -Lo /etc/yum.repos.d/devel:kubic:libcontainers:stable.repo https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/CentOS_8/devel:kubic:libcontainers:stable.repo
-curl -Lo /etc/yum.repos.d/devel:kubic:libcontainers:stable:cri-o:<latest-version>.repo https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:<latest-version>/CentOS_8/devel:kubic:libcontainers:stable:cri-o:<latest-version>.repo
+cat <<EOF | sudo tee /etc/yum.repos.d/cri-o.repo
+[cri-o]
+name=CRI-O
+baseurl=https://pkgs.k8s.io/addons:/cri-o:/stable:/v<stable-version>/rpm/
+enabled=1
+gpgcheck=1
+gpgkey=https://pkgs.k8s.io/addons:/cri-o:/stable:/v<stable-version>/rpm/repodata/repomd.xml.key
+
+EOF
 ```
 
 - Install cri-o `dnf install cri-o cri-tools`
 - Enable the cri-o service `systemctl enable --now crio`
-- Add the kubernetes repo:
+- Add the kubernetes repo (make sure you use the same version as for cri-o):
 
 ```bash
 cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
-baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+baseurl=https://pkgs.k8s.io/core:/stable:/v<stable-version>/rpm/
 enabled=1
 gpgcheck=1
-repo_gpgcheck=1
-gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+gpgkey=https://pkgs.k8s.io/core:/stable:/v<stable-version>/rpm/repodata/repomd.xml.key
 
 EOF
 ```
 
-- Install Kubernetes `dnf install kubeadm kubectl`
+- Install Kubernetes `dnf install kubeadm kubectl kubelet`
 - Create the kubeconfig with:
 
 ```bash
@@ -79,7 +85,7 @@ kind: InitConfiguration
 ---
 apiVersion: kubeadm.k8s.io/v1beta3
 kind: ClusterConfiguration
-kubernetesVersion: v<current-kubeadm-version>
+kubernetesVersion: v<installed-kubeadm-version>
 networking:
   podSubnet: 10.16.0.0/16
   serviceSubnet: 10.96.0.0/12
