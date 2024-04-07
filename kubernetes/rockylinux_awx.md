@@ -320,3 +320,5 @@ kubectl logs -n projectcontour deployment/contour --all-containers -f
 
 Most likely it's because SELinux is misbehaving.
 Could be that you have to set SELinux to permissive mode overall... which is sad.
+
+[https://fedoramagazine.org/kubernetes-with-cri-o-on-fedora-linux-39/](https://fedoramagazine.org/kubernetes-with-cri-o-on-fedora-linux-39/)
