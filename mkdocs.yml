@@ -1,2 +1,4 @@
 site_name: Knowledgebase
 site_author: lumarel
+theme:
+  name: material
