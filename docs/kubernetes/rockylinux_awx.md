@@ -1,11 +1,8 @@
-# Ansible AWX on a Single node Kubernetes cluster on Rocky Linux 8
-
-!!! note
-    This guide also applies to Rocky Linux 9
+# Ansible AWX on a Single node Kubernetes cluster on Rocky Linux
 
 ## Deploy VM
 
-- Deploy Rocky Linux 8 ISO with 4 cores, 12Gi of memory, 50Gi of storage
+- Deploy Rocky Linux ISO with 4 cores, 12Gi of memory, 50Gi of storage
 - Configure an A record for the machine and a CNAME record for AWX on your DNS server
 - On install configure the fqdn as hostname and given static IP address
 - Also configure the NTP server in Anaconda
