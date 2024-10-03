@@ -2,7 +2,7 @@
 
 ## Extend virtual disk lvm -> xfs
 
-``` sh linenums="1"
+```sh
 echo 1 > /sys/block/sda/device/rescan
 growpart /dev/sda 3
 pvresize /dev/sda3
@@ -12,7 +12,7 @@ xfs_growfs /
 
 ## Extend virtual disk lvm -> ext4
 
-``` sh linenums="1"
+```sh
 echo 1 > /sys/block/sda/device/rescan
 growpart /dev/sda 3
 pvresize /dev/sda3
@@ -22,7 +22,7 @@ resize2fs /dev/mapper/lvmvol-root
 
 ## Extend virtual disk lvm -> btrfs
 
-``` sh linenums="1"
+```sh
 echo 1 > /sys/block/sda/device/rescan
 growpart /dev/sda 3
 pvresize /dev/sda3
@@ -32,7 +32,7 @@ btrfs filesystem resize max /
 
 ## Extend virtual disk lvm -> swap
 
-``` sh linenums="1"
+```sh
 echo 1 > /sys/block/sda/device/rescan
 growpart /dev/sda 3
 pvresize /dev/sda3
