@@ -24,6 +24,7 @@ theme:
         icon: material/brightness-4
         name: Switch to system preference
   features:
+    - content.code.copy
     - content.tabs.link
     - navigation.instant
     - navigation.instant.progress
