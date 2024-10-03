@@ -28,7 +28,7 @@ jobs:
         with:
           python-version: "3"
       - name: Install mkdocs
-        run: pip install mkdocs
+        run: pip install mkdocs mkdocs-material
       - name: Build docs
         run: mkdocs build
       - name: Set up Pages
