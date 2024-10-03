@@ -1,6 +1,7 @@
 site_name: Knowledgebase
 site_author: lumarel
 repo_url: https://github.com/lumarel/knowledgebase
+repo_name: lumarel/knowledgebase
 site_url: https://gh.clmdn.eu/knowledgebase
 theme:
   name: material
@@ -26,3 +27,5 @@ theme:
     - navigation.instant
     - navigation.instant.progress
     - navigation.tracking
+markdown_extensions: 
+  - admonition

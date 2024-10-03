@@ -1,7 +1,7 @@
 # Ansible AWX on a Single node Kubernetes cluster on Rocky Linux 8
 
-> [!NOTE]
-> This guide also applies to Rocky Linux 9
+!!! note
+    This guide also applies to Rocky Linux 9
 
 ## Deploy VM
 
