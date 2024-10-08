@@ -232,8 +232,19 @@ EOF
 
 ### Kubernetes Upgrade
 
-> [!WARNING]
-> Upgrading a single node kubernetes cluster is always a play with the fire, make sure you always make backups/snapshots before the operation!
+!!! warning
+    Upgrading a single node kubernetes cluster is always a play with the fire, make sure you always make backups/snapshots before the operation!
+
+Make sure you always lift the cluster version before you lift the `kubelet` version!
+
+#### Kubernetes cluster version updates
+
+This is only possible if the kubeadm version has progressed, it's only possible to upgrade to versions lower than or exactly the kubeadm version.
+
+- Update the kubeadm version `dnf update kubeadm`
+- Check for updates `kubeadm upgrade plan`
+- The plan will tell you what is possible to be upgraded (this might show incorrect options, that don't work with your kubeadm version)
+- Upgrade to the wanted version with `kubeadm upgrade apply v<cluster-version>`
 
 #### OS updates
 
@@ -242,14 +253,6 @@ EOF
 - Start kubelet again `systemctl start kubelet`
 - Check with `journalctl -f` if the containers are coming up normally again and if the CNI configures the network in a working state again
 - If a restart is needed, stop kubelet again and restart (sometimes only a restart gets the system working again)
-
-#### Kubernetes cluster version updates
-
-This is only possible if the kubeadm version has progressed, it's only possible to upgrade to versions lower than or exactly the kubeadm version.
-
-- Check for updates `kubeadm upgrade plan`
-- The plan will tell you what is possible to be upgraded (this might show incorrect options, that don't work with your kubeadm version)
-- Upgrade to the wanted version with `kubeadm upgrade apply v<cluster-version>`
 
 #### Project repo path switch
 
