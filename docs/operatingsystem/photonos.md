@@ -1,4 +1,4 @@
-# Knowledge article for PhotonOS
+# PhotonOS
 
 ## Change password to never expire
 
