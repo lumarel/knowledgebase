@@ -14,22 +14,21 @@
 
 [ACME Clients](https://smallstep.com/docs/tutorials/acme-protocol-acme-clients)
 
-- Download the current version of `step-ca` and `step` from the Github releases
+- Setup smallstep repository:
 
 ```bash
-curl -O https://dl.step.sm/gh-release/certificates/docs-ca-install/v0.19.0/step-ca_linux_0.19.0_amd64.tar.gz
-tar -xzvf step-ca_linux_0.19.0_amd64.tar.gz
-mv step-ca_0.19.0/bin/step-ca /usr/local/bin
-chown root:root /usr/local/bin/step-ca
-restorecon /usr/local/bin/step-ca
-curl -LO https://dl.step.sm/gh-release/cli/docs-ca-install/v0.19.0/step_linux_0.19.0_amd64.tar.gz
-tar -xzvf step_linux_0.19.0_amd64.tar.gz
-mv step_0.19.0/bin/step /usr/local/bin
-chown root:root /usr/local/bin/step
-restorecon /usr/local/bin/step
-rm -rf step*
+cat <<EOF > /etc/yum.repos.d/smallstep.repo
+[smallstep]
+name=Smallstep
+baseurl=https://packages.smallstep.com/stable/fedora/
+enabled=1
+repo_gpgcheck=0
+gpgcheck=1
+gpgkey=https://packages.smallstep.com/keys/smallstep-0x889B19391F774443.gpg
+EOF
 ```
 
+- Install `step-ca` and `step` with `dnf install step-ca step-cli`
 - Init the step-ca with `step ca init`
   - Use `Standalone`
   - Name the CA i.e. `subca01`
@@ -40,14 +39,14 @@ rm -rf step*
 - Delete the root_ca_key with `rm ~/.step/secrets/*`
 - Change the `root_ca.crt` to the public certificate of your root_ca with `vi ~/.step/certs/root_ca.crt`
 - Add a safe enough password to the `key.pass` file with `vi ~/.step/key.pass` (you can use the generated cert from the init)
-- Create the CSR for the intermediate_ca
+- Create the CSR for the intermediate_ca:
 
 ```bash
 step certificate create <subject-of-cert> intermediate.csr ~/.step/secrets/intermediate_ca_key --csr [--san subca01.example.com [--san subca01.example.com]] --password-file ~/.step/key.pass
 ```
 
 - Copy the CSR to the root_ca and sign it
-  - For ADCS it looks like that for signing
+  - For ADCS it looks like that for signing:
 
     ```batch
     certreq -submit -attrib "CertificateTemplate:SubCA" intermediate.csr intermediate.crt
@@ -62,7 +61,7 @@ step certificate create <subject-of-cert> intermediate.csr ~/.step/secrets/inter
 - Change the paths from `~/.step` to `/etc/step-ca` in the two files `config/defaults.json` and `config/ca.json`
 - And change the `db.dataSource` path to `/var/lib/step-ca/db` in the `config/ca.json` file
 - Create an account for the service with `useradd --system --home /etc/step-ca --shell /bin/false step`
-- Fix the permissions for both directories
+- Fix the permissions for both directories:
 
 ```bash
 chown -R step:step /etc/step-ca
@@ -133,14 +132,14 @@ WantedBy=multi-user.target
 
 - Reload systemd with `systemctl daemon-reload`
 - Start the systemd service with `systemctl enable --now step-ca.service`
-- And finally open the firewall
+- And finally open the firewall:
 
 ```bash
 firewall-cmd --add-service=https --permanent
 firewall-cmd --reload
 ```
 
-- To use some `step` commands after the move you will need to add some variables to your profile (like the `~/.bashrc`)
+- To use some `step` commands after the move you will need to add some variables to your profile (like the `~/.bashrc`):
 
 ```bash
 export STEPPATH=/etc/step-ca
@@ -155,7 +154,6 @@ export STEP_ROOT=/etc/step-ca/certs/root_ca.crt
 - Before installing setup a PostgreSQL database:
 
 ```bash
-dnf module enable postgresql:13
 dnf install postgresql-server
 postgresql-setup initdb
 ```
@@ -187,11 +185,14 @@ grant all privileges on database stepca to stepca;
 
 ### Active revocation
 
-[Enable Active Revocation](https://smallstep.com/docs/step-ca/certificate-authority-server-production#enable-active-revocation-on-your-intermediate-ca)
+[Enable Active Revocation](https://smallstep.com/docs/step-ca/certificate-authority-server-production/#consider-active-revocation)
 
-If active revocation is needed the step for the sub-ca creation works a little bit different.
+For all CRLs provided in the certificates, the `crlDistributionPoints` variable has to exactly match the CDP variable in the CRL!  
+By default the `idpURL` is `https://<ca-fqdn>/1.0/crl`.
 
-- Before creating the CSR create a template file in `~/.step/templates/intermediate.tpl` with the following content
+#### Intermediate CA certificates
+
+- Before creating the CSR create a template file in `~/.step/templates/intermediate.tpl` with the following content:
 
 ```json
 {
@@ -201,51 +202,42 @@ If active revocation is needed the step for the sub-ca creation works a little b
                 "isCA": true,
                 "maxPathLen": 0
         },
-        "crlDistributionPoints": {
-                ["http://crl.example.com/crl/subca01.crl"]
-        }
+        "issuingCertificateURL": "http://crl.example.com/rootca.crt",
+        "crlDistributionPoints": ["http://subca01.example.com/1.0/crl"]
 }
 ```
 
-- After that run the this command instead of the other CSR create
+- After that run the this command instead of the other CSR create:
 
 ```bash
 step certificate create <subject-of-cert> intermediate.csr ~/.step/secrets/intermediate_ca_key --csr [--san <subject-of-cert>.example.com [--san subca01.example.com]] --password-file ~/.step/key.pass --template intermediate.tpl
 ```
 
-- Create the CRL manually i.e. with openssl
-  - Create a openssl config file in `~/openssl.conf`
+##### Client certificates
 
-    ```ini
-    [ ca ]
-    default_ca = CA_default
+For custom client certificates for either all or specific providers setup a template for each case.
 
-    [ CA_default ]
-    default_crl_days = 30
-    database = index.txt
-    default_md = sha256
-    ```
+- Create a template like `templates/server.tpl`:
 
-  - Create an empty `index.txt` file with `touch index.txt`
-  - Create the CRL in PEM form
+```json
+{
+  "subject": {{ toJson .Subject }},
+  "sans": {{ toJson .SANs }},
+{{- if typeIs "*rsa.PublicKey" .Insecure.CR.PublicKey }}
+  "keyUsage": ["keyEncipherment", "digitalSignature"],
+{{- else }}
+  "keyUsage": ["digitalSignature"],
+{{- end }}
+  "extKeyUsage": ["serverAuth", "clientAuth"],
+  "issuingCertificateURL": "http://crl.example.com/rootca.crt",
+  "crlDistributionPoints": ["http://subca01.example.com/1.0/crl"]
+}
+```
 
-    ```bash
-    openssl ca -config openssl.conf -gencrl -keyfile ~/.step/secrets/intermediate_ca_key -cert ~/.step/certs/intermediate_ca.crt -out ca.crl.pem
-    ```
-
-  - Convert the CRL to DER form
-
-    ```bash
-    openssl crl -inform PEM -in ca.crl.pem -outform DER -out ca.crl
-    ```
-
-- And finally upload the CRL file to the webserver which you defined in the `crlDistributionPoints` property
-- If a certificate needs to be revoked manually enter it in the index.txt file and renew the CRL
-
-The CRL will expire, so don't forget to renew it manually or automatically from time to time!
+- And then reference the templates relative path in the `ca.json` config file
 
 ## Links for operation
 
 - [badger database cleanup](https://github.com/smallstep/certificates/issues/473)
 - [logging/certificate reading from database](https://github.com/smallstep/certificates/issues/239)
-- [soon tm real active CRL function](https://github.com/smallstep/certificates/pull/731)
+- [CRL setups with reverse proxy inbetween](https://github.com/smallstep/certificates/issues/2150)
