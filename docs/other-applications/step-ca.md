@@ -229,7 +229,7 @@ For custom client certificates for either all or specific providers setup a temp
   "keyUsage": ["digitalSignature"],
 {{- end }}
   "extKeyUsage": ["serverAuth", "clientAuth"],
-  "issuingCertificateURL": "http://crl.example.com/rootca.crt",
+  "issuingCertificateURL": "http://crl.example.com/subca01.crt",
   "crlDistributionPoints": ["http://subca01.example.com/1.0/crl"]
 }
 ```
