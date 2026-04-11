@@ -270,9 +270,36 @@ esac
 Documentation source: [here](https://github.com/PowerDNS-Admin/PowerDNS-Admin/blob/master/README.md#running-powerdns-admin) and [here](https://github.com/PowerDNS-Admin/PowerDNS-Admin/wiki/Running-PowerDNS-Admin-with-Systemd,-Gunicorn--and--Nginx)
 
 - `dnf install podman`
+- `mkdir /etc/containers/systemd/powerdns-admin`
+- Create the following `/etc/containers/systemd/powerdns-admin/powerdns-admin.pod` file:
 
-- Install docker
-- `docker run -d -e SECRET_KEY='<secure-password>' -v pda-data:/data -p 9191:80 powerdnsadmin/pda-legacy:latest`
+```ini
+[Pod]
+PublishPort=127.0.0.1:9191:80
+
+[Install]
+WantedBy=default.target
+```
+
+- Create the following `/etc/containers/systemd/powerdns-admin/pda-legacy.container` file:
+
+```ini
+[Unit]
+Description=PowerDNS Admin
+
+[Container]
+AutoUpdate=registry
+Pod=powerdns-admin.pod
+Image=docker.io/powerdnsadmin/pda-legacy:latest
+Volume=pda-data:/data
+Environment=SECRET_KEY=<secret-key>
+
+[Service]
+TimeoutStartSec=900
+```
+
+- `systemctl daemon-reload`
+- `systemctl start powerdns-admin-pod`
 - Add nginx configuration in `/etc/nginx/conf.d/powerdns-admin.conf`:
 
 ```conf
